@@ -1,125 +1,53 @@
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
 #include <thread>
+#include <mutex>
+#include <random>
 #include <Windows.h>
-#include <string>
 using namespace std;
 
-//void printNumbers()
-//{
-//	for (int i = 1; i <= 100; i++)
-//	{
-//		cout << "Number: " << i << endl;
-//		Sleep(200);
-//	}
-//}
-//
-//void printLetters()
-//{
-//	for (char i = 'A'; i <= 'Z'; i++)
-//	{
-//		cout << "Letter: " << i << endl;
-//		Sleep(500);
-//	}
-//}
-//
-//int main()
-//{
-//	int a, b;
-//	int Sum = 0;
-//	cout << "Enter diapazon from 1 to 100: ";
-//	cin >> a >> b;
-//
-//	thread num(printNumbers);
-//	thread let(printLetters);
-//	num.join();
-//	let.join();
-//
-//	for (int i = a; i <= b; i++)
-//	{
-//		Sum += i;
-//	}
-//	cout << "Sum: " << Sum << endl;
-//	return 0;
-//}
+mutex m;
+int arr[100];
 
-void OutFile()
+void WriteInFile()
 {
-	ofstream outFileNum("numbers.txt");
-	ofstream outFileLet("letter.txt");
-	if (outFileNum.is_open())
+	m.lock();
+	ofstream fout("array.txt");
+	if (!fout.is_open())
 	{
-		for (int i = 0; i <= 100; i++)
-		{
-			outFileNum << i << endl;
-		}
+		cout << "Error!" << endl;
 	}
-	else
+	for (size_t i = 0; i < 100; i++)
 	{
-		cout << "Cannot open file" << endl;
+		arr[i] = rand() % 101;
+		fout << "Array[" << i << "]: " << arr[i] << endl;
 	}
-
-	if (outFileLet.is_open())
-	{
-		for (char i = 'A'; i <= 'Z'; i++)
-		{
-			outFileLet << i << endl;
-		}
-	}
-	else
-	{
-		cout << "Cannot open file" << endl;
-	}
-
-	outFileNum.close();
-	outFileLet.close();
+	fout.close();
+	m.unlock();
 }
 
-void ReadNumFile()
+void ReadFromFile()
 {
-	ifstream file("numbers.txt");
-
-	if (!file.is_open())
+	m.lock();
+	ifstream fin("array.txt");
+	if (!fin.is_open())
 	{
-		cout << "Cannot open file" << endl;
+		cout << "Error!" << endl;
 	}
-	string line;
-	while (getline(file, line))
+	for (size_t i = 0; i < 100; i++)
 	{
-		cout << line << endl;
+		cout << "Array[" << i << "]: " << arr[i] << endl;
 	}
-
-	file.close();
-}
-
-void ReadLetFile()
-{
-	ifstream file("letter.txt");
-
-	if (!file.is_open())
-	{
-		cout << "Cannot open file" << endl;
-	}
-	string line;
-	while (getline(file, line))
-	{
-		cout << line << endl;
-	}
-
-	file.close();
+	fin.close();
+	m.unlock();
 }
 
 int main()
 {
-	OutFile();
-
-	thread t1(ReadNumFile);
-	thread t2(ReadLetFile);
+	thread t1(WriteInFile);
+	Sleep(100);
+	thread t2(ReadFromFile);
 
 	t1.join();
 	t2.join();
-
-	cout << "Thread is ended!" << endl;
-
-	return 0;
 }
